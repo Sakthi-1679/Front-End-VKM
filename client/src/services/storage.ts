@@ -1,8 +1,10 @@
+
 import { User, Product, Order, CustomOrder, UserRole, OrderStatus, AuthResponse } from '../types';
 
-// Use Vite environment variable for API URL in production
-// We cast import.meta to any to avoid TypeScript errors when vite/client types are missing
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
+// Use relative path '/api' by default. 
+// In Development: vite.config.ts proxies this to http://localhost:3001
+// In Production: vercel.json rewrites this to the server function
+const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) => {
   try {
@@ -16,6 +18,9 @@ const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) 
     const config: any = { method, headers };
     if (body) config.body = JSON.stringify(body);
     
+    // Construct full URL.
+    // If API_URL is relative (/api), valid for proxy/same-origin.
+    // If API_URL is absolute, uses that.
     const fullUrl = `${API_URL}${endpoint}`;
     
     const response = await fetch(fullUrl, config);
@@ -29,6 +34,7 @@ const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) 
       return data;
     } else {
       const text = await response.text();
+      // If we get HTML here, it means we hit the frontend server instead of backend, or a 404 page
       throw new Error(`Non-JSON Error (${response.status}) at ${endpoint}: ${text.substring(0, 100)}`);
     }
 
