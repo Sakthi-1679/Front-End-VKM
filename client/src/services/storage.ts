@@ -7,6 +7,11 @@ import { User, Product, Order, CustomOrder, UserRole, OrderStatus, AuthResponse 
 const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) => {
+  // Construct full URL.
+  // If API_URL is relative (/api), valid for proxy/same-origin.
+  // If API_URL is absolute, uses that.
+  const fullUrl = `${API_URL}${endpoint}`;
+
   try {
     const session = getCurrentSession();
     const headers: any = { 'Content-Type': 'application/json' };
@@ -17,11 +22,6 @@ const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) 
 
     const config: any = { method, headers };
     if (body) config.body = JSON.stringify(body);
-    
-    // Construct full URL.
-    // If API_URL is relative (/api), valid for proxy/same-origin.
-    // If API_URL is absolute, uses that.
-    const fullUrl = `${API_URL}${endpoint}`;
     
     const response = await fetch(fullUrl, config);
     
@@ -34,12 +34,12 @@ const apiRequest = async (endpoint: string, method: string = 'GET', body?: any) 
       return data;
     } else {
       const text = await response.text();
-      // If we get HTML here, it means we hit the frontend server instead of backend, or a 404 page
-      throw new Error(`Non-JSON Error (${response.status}) at ${endpoint}: ${text.substring(0, 100)}`);
+      // Include fullUrl in error message for clarity
+      throw new Error(`Non-JSON Error (${response.status}) at ${fullUrl}: ${text.substring(0, 100)}`);
     }
 
   } catch (error: any) {
-    console.error(`Fetch Failure [${method} ${endpoint}]:`, error.message);
+    console.error(`Fetch Failure [${method} ${fullUrl}]:`, error.message);
     throw error;
   }
 };
