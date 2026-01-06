@@ -16,7 +16,7 @@ export const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await login(email, password);
+      const response = await login(email.trim(), password.trim());
       if (response && response.user) {
         loginUser(response);
         notify(`Welcome back, ${response.user.name}!`, "success");
@@ -28,7 +28,7 @@ export const Login: React.FC = () => {
         }
       }
     } catch (err: any) {
-      notify('Invalid credentials. Please verify your email and password.', "error");
+      notify(err.message || 'Invalid credentials. Please verify your email and password.', "error");
     }
   };
 
